@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="iPod">
+    <meta name="theme-color" content="#000000">
+    <title>iPod</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <h1 class="logo">Suhpod</h1>
+            <button class="load-btn" id="loadBtn" aria-label="Load music">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Now Playing Screen -->
+        <div class="screen" id="nowPlayingScreen">
+            <div class="now-playing">
+                <!-- Video Player (hidden by default) -->
+                <div class="video-container" id="videoContainer" style="display: none;">
+                    <video id="videoPlayer" playsinline webkit-playsinline></video>
+                </div>
+                
+                <div class="track-info">
+                    <div class="track-title" id="trackTitle">No track loaded</div>
+                    <div class="track-artist" id="trackArtist">—</div>
+                </div>
+                <div class="progress-container">
+                    <div class="time" id="currentTime">0:00</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="time" id="duration">0:00</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls - iPod Click Wheel -->
+        <div class="controls">
+            <button class="control-btn" id="prevBtn" aria-label="Previous track" disabled>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                </svg>
+            </button>
+            <button class="control-btn play-btn" id="playBtn" aria-label="Play" disabled>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" id="playIcon">
+                    <path d="M8 5v14l11-7z"/>
+                </svg>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" id="pauseIcon" style="display: none;">
+                    <path d="M6 4h4v16H6zM14 4h4v16h-4z"/>
+                </svg>
+            </button>
+            <button class="control-btn" id="nextBtn" aria-label="Next track" disabled>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 18h2V6h-2zm-11-7l8.5-6v12z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Track List -->
+        <div class="tracklist-container">
+            <div class="tracklist-header">
+                <span id="trackCount">0 tracks</span>
+                <button class="clear-btn" id="clearBtn" style="display: none;">Clear all</button>
+            </div>
+            <ul class="tracklist" id="tracklist">
+                <li class="empty-state">
+                    <p>No music loaded</p>
+                    <p class="hint">Tap the upload button to add tracks</p>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Hidden file input -->
+    <input type="file" id="fileInput" accept="audio/mpeg,audio/mp3,audio/m4a,audio/mp4,video/mp4,video/m4v,video/quicktime" multiple style="display: none;">
+
+    <script src="app.js"></script>
+</body>
+</html>

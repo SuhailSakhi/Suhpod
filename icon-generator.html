@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Icon Generator</title>
+</head>
+<body>
+    <h2>iPod Icon Generator</h2>
+    <p>Right-click each canvas and "Save Image As..."</p>
+    
+    <div>
+        <h3>icon-192.png</h3>
+        <canvas id="icon192" width="192" height="192"></canvas>
+    </div>
+    
+    <div>
+        <h3>icon-512.png</h3>
+        <canvas id="icon512" width="512" height="512"></canvas>
+    </div>
+
+    <script>
+        function drawIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            
+            // Black background
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            
+            // White music note
+            ctx.fillStyle = '#FFFFFF';
+            
+            // Scale based on canvas size
+            const scale = size / 192;
+            const centerX = size / 2;
+            const centerY = size / 2;
+            
+            // Music note (eighth note)
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.scale(scale, scale);
+            
+            // Note head (circle)
+            ctx.beginPath();
+            ctx.ellipse(-10, 20, 15, 12, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Note stem
+            ctx.fillRect(3, -30, 4, 50);
+            
+            // Note flag
+            ctx.beginPath();
+            ctx.moveTo(7, -30);
+            ctx.bezierCurveTo(20, -25, 25, -15, 20, -5);
+            ctx.bezierCurveTo(15, 0, 10, 0, 7, -5);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        drawIcon(document.getElementById('icon192'));
+        drawIcon(document.getElementById('icon512'));
+    </script>
+</body>
+</html>
