@@ -821,3 +821,251 @@ html, body {
 .loading {
     animation: pulse 1.5s ease-in-out infinite;
 }
+
+/* iPhone 5/SE (320px) Responsive Design */
+@media screen and (max-width: 360px) {
+    /* Reduce app padding */
+    .app {
+        padding: max(var(--safe-area-top), 8px) 12px max(var(--safe-area-bottom), 8px);
+    }
+    
+    /* Header adjustments */
+    .header {
+        padding: 8px 0;
+        gap: 8px;
+    }
+    
+    .title {
+        font-size: 20px;
+    }
+    
+    .playlist-selector {
+        font-size: 11px;
+        padding: 5px 10px;
+        min-width: 80px;
+    }
+    
+    .load-btn {
+        padding: 8px;
+    }
+    
+    .load-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    /* Screen - keep video visible */
+    .screen {
+        padding: 12px;
+        margin: 0 6px 10px;
+        border-radius: 16px;
+    }
+    
+    .screen-display {
+        height: 160px;
+        min-height: 160px;
+    }
+    
+    /* Track info */
+    .track-title {
+        font-size: 14px;
+    }
+    
+    .track-artist {
+        font-size: 11px;
+    }
+    
+    /* Progress bar */
+    .progress-container {
+        height: 4px;
+        margin: 6px 0;
+    }
+    
+    .time-display {
+        font-size: 10px;
+        margin-top: 4px;
+    }
+    
+    /* Video container - maintain good size */
+    .video-container {
+        border-radius: 12px;
+    }
+    
+    .video-player {
+        border-radius: 12px;
+    }
+    
+    /* Controls - smaller click wheel */
+    .controls {
+        width: 200px;
+        height: 200px;
+        margin: 10px auto;
+    }
+    
+    .controls::after {
+        width: 100px;
+        height: 100px;
+    }
+    
+    /* Adjust button positions for smaller wheel */
+    #menuBtn {
+        top: 12px;
+    }
+    
+    #seekBackwardBtn {
+        left: 12px;
+    }
+    
+    #seekForwardBtn {
+        right: 12px;
+    }
+    
+    .control-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+    
+    .play-btn svg {
+        width: 28px;
+        height: 28px;
+    }
+    
+    /* Tracklist container */
+    .tracklist-container {
+        margin: 0 6px 8px;
+        border-radius: 14px;
+        min-height: 100px;
+    }
+    
+    /* Menu items */
+    .menu-header {
+        padding: 10px 12px;
+    }
+    
+    .menu-header h2 {
+        font-size: 13px;
+    }
+    
+    .back-btn {
+        font-size: 18px;
+    }
+    
+    .menu-item {
+        padding: 12px 14px;
+    }
+    
+    .menu-item span {
+        font-size: 13px;
+    }
+    
+    .playlist-name {
+        font-size: 12px;
+    }
+    
+    .playlist-count {
+        font-size: 10px;
+    }
+    
+    /* Track list items */
+    .tracklist li {
+        padding: 10px 12px;
+    }
+    
+    .track-item-title {
+        font-size: 12px;
+    }
+    
+    .track-item-duration {
+        font-size: 11px;
+    }
+    
+    .delete-track-btn {
+        font-size: 14px;
+        padding: 4px 6px;
+    }
+    
+    /* Indicators */
+    .seek-indicator {
+        padding: 10px 16px;
+        border-radius: 10px;
+    }
+    
+    .seek-icon {
+        font-size: 20px;
+    }
+    
+    .seek-text {
+        font-size: 12px;
+    }
+    
+    .multi-tap-indicator {
+        padding: 14px 20px;
+        border-radius: 14px;
+    }
+    
+    .tap-count {
+        font-size: 28px;
+    }
+    
+    .tap-text {
+        font-size: 12px;
+    }
+}
+
+/* Extra small screens (iPhone 5: 320px) */
+@media screen and (max-width: 330px) {
+    .app {
+        padding: max(var(--safe-area-top), 6px) 10px max(var(--safe-area-bottom), 6px);
+    }
+    
+    .title {
+        font-size: 18px;
+    }
+    
+    .screen {
+        padding: 10px;
+        margin: 0 4px 8px;
+    }
+    
+    .screen-display {
+        height: 150px;
+        min-height: 150px;
+    }
+    
+    .controls {
+        width: 180px;
+        height: 180px;
+        margin: 8px auto;
+    }
+    
+    .controls::after {
+        width: 90px;
+        height: 90px;
+    }
+    
+    #menuBtn {
+        top: 10px;
+    }
+    
+    #seekBackwardBtn {
+        left: 10px;
+    }
+    
+    #seekForwardBtn {
+        right: 10px;
+    }
+    
+    .control-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .play-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .tracklist-container {
+        margin: 0 4px 6px;
+    }
+}
