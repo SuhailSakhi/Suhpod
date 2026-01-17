@@ -57,6 +57,8 @@ html, body {
     align-items: center;
     padding: 12px 20px 10px;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
 .logo {
@@ -67,6 +69,26 @@ html, body {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+    flex: 1;
+}
+
+.playlist-selector {
+    font-size: 12px;
+    color: #666;
+    background: white;
+    padding: 6px 12px;
+    border-radius: 12px;
+    cursor: pointer;
+    border: 1px solid #d0d0d0;
+    transition: all 0.2s;
+    min-width: 100px;
+    text-align: center;
+    font-weight: 600;
+}
+
+.playlist-selector:active {
+    background: #f0f0f0;
+    transform: scale(0.95);
 }
 
 .load-btn {
@@ -80,12 +102,12 @@ html, body {
     justify-content: center;
     border-radius: 50%;
     transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
 }
 
 .load-btn:active {
     transform: scale(0.9);
-    box-shadow: 0 2px 8px rgba(0, 212, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
 }
 
 /* Now Playing Screen */
@@ -246,65 +268,66 @@ html, body {
 }
 
 /* Position buttons around the wheel */
-#volumeUpBtn {
+#menuBtn {
     top: 15px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-#prevBtn {
+#seekBackwardBtn {
     left: 15px;
     top: 50%;
     transform: translateY(-50%);
 }
 
-#nextBtn {
+#seekForwardBtn {
     right: 15px;
     top: 50%;
     transform: translateY(-50%);
 }
 
-#volumeDownBtn {
-    bottom: 15px;
+#playBtn {
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
 }
 
-#nextBtn:active:not(:disabled) {
-    transform: translateY(-50%) scale(0.85);
-}
-
-#prevBtn:active:not(:disabled) {
-    transform: translateY(-50%) scale(0.85);
-}
-
-#volumeUpBtn:active {
+#menuBtn:active {
     transform: translateX(-50%) scale(0.85);
 }
 
-#volumeDownBtn:active {
-    transform: translateX(-50%) scale(0.85);
+#seekBackwardBtn:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.85);
+}
+
+#seekForwardBtn:active:not(:disabled) {
+    transform: translateY(-50%) scale(0.85);
+}
+
+#playBtn:active:not(:disabled) {
+    transform: translate(-50%, -50%) scale(0.9);
 }
 
 /* Play button in center */
 .play-btn {
-    position: relative;
-    z-index: 3;
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(145deg, var(--accent), var(--accent-hover));
+    z-index: 10 !important;
+    width: 80px !important;
+    height: 80px !important;
+    background: linear-gradient(145deg, #4a90e2, #357abd);
     border-radius: 50%;
-    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4),
-                0 2px 4px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
+    padding: 0 !important;
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .play-btn:active:not(:disabled) {
-    transform: scale(0.9);
-    box-shadow: 0 2px 12px rgba(0, 212, 255, 0.4);
+    transform: translate(-50%, -50%) scale(0.95) !important;
+    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3),
+                inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .play-btn svg {
@@ -368,108 +391,377 @@ html, body {
     font-variant-numeric: tabular-nums;
 }
 
-/* Track List */
+/* Seek Indicator */
+.seek-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(10px);
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.2s ease;
+}
+
+.seek-icon {
+    font-size: 24px;
+}
+
+.seek-text {
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+/* Multi-tap Indicator */
+.multi-tap-indicator {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(74, 144, 226, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 16px 24px;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(74, 144, 226, 0.4);
+    animation: fadeIn 0.2s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.tap-count {
+    font-size: 32px;
+    font-weight: 800;
+    color: white;
+    line-height: 1;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.tap-text {
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+/* Track List Container */
 .tracklist-container {
     flex: 1;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    margin: 0 10px 5px;
+    margin: 0 10px 10px;
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    min-height: 100px;
+    min-height: 120px;
+    border: 2px solid #e0e0e0;
 }
 
-.tracklist-header {
+/* Menu View */
+.menu-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: white;
+    overflow: hidden;
+}
+
+.menu-header {
+    background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%);
+    padding: 12px 16px;
+    border-bottom: 1px solid #d0d0d0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.menu-header h2 {
+    font-size: 14px;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    flex: 1;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #4a90e2;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s ease;
+    font-weight: 600;
+}
+
+.back-btn:hover {
+    color: #357abd;
+}
+
+.back-btn:active {
+    transform: scale(0.9);
+}
+
+.menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.menu-item {
+    background: white;
+    border-bottom: 1px solid #e8e8e8;
+    padding: 14px 16px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 12px 16px;
-    flex-shrink: 0;
-    background: linear-gradient(135deg, #f8f8f8 0%, #ffffff 100%);
-    border-radius: 16px 16px 0 0;
-}
-
-.tracklist-header span {
-    font-size: 13px;
-    color: var(--text-secondary);
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    font-weight: 700;
-}
-
-.clear-btn {
-    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-    border: none;
-    color: white;
-    font-size: 12px;
     cursor: pointer;
-    padding: 6px 14px;
-    border-radius: 12px;
-    transition: all 0.2s;
+    transition: background 0.15s ease;
+}
+
+.menu-item:hover {
+    background: #f8f8f8;
+}
+
+.menu-item:active {
+    background: #4a90e2;
+    color: white;
+}
+
+.menu-item.special {
+    background: linear-gradient(180deg, #5a9eea 0%, #4a90e2 100%);
+    color: white;
+    font-weight: 700;
+    border-bottom: 1px solid #357abd;
+    box-shadow: 0 2px 6px rgba(74, 144, 226, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.menu-item.special:hover {
+    background: linear-gradient(180deg, #6aaefd 0%, #5a9eea 100%);
+}
+
+.menu-item.special:active {
+    background: linear-gradient(180deg, #357abd 0%, #2a6aa0 100%);
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.menu-item .arrow {
+    font-size: 20px;
+    color: #999;
+    font-weight: 300;
+}
+
+.menu-item:active .arrow {
+    color: white;
+}
+
+/* Playlist Menu Items */
+.playlist-menu-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.playlist-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.playlist-name {
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(238, 90, 111, 0.3);
+    color: #333;
+    font-size: 13px;
 }
 
-.clear-btn:active {
-    transform: scale(0.95);
-    box-shadow: 0 1px 4px rgba(238, 90, 111, 0.3);
+.playlist-menu-item .playlist-count {
+    font-size: 11px;
+    color: #666;
+    font-weight: 500;
 }
 
+.playlist-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.delete-playlist-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+}
+
+.delete-playlist-btn:hover {
+    opacity: 1;
+}
+
+.delete-playlist-btn:active {
+    transform: scale(1.2);
+}
+
+.tracklist-header {
+    background: linear-gradient(180deg, #f8f8f8 0%, #e8e8e8 100%);
+    padding: 12px 20px;
+    flex-shrink: 0;
+    border-radius: 14px 14px 0 0;
+    border-bottom: 1px solid #d0d0d0;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tracklist-header h2 {
+    margin: 0;
+    color: #333;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.playlist-btn {
+    background: white;
+    border: 1px solid #d0d0d0;
+    color: #666;
+    font-size: 18px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    line-height: 1;
+}
+
+.playlist-btn:active {
+    background: #f0f0f0;
+    transform: scale(0.9);
+}
+
+/* Track List */
 .tracklist {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     list-style: none;
+    padding: 0;
+    margin: 0;
     -webkit-overflow-scrolling: touch;
     background: white;
 }
 
 .tracklist li {
     padding: 12px 16px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    transition: all 0.2s;
+    border-bottom: 1px solid #e8e8e8;
+    transition: all 0.15s;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 8px;
+    color: #333;
+    background: white;
 }
 
 .tracklist li:active {
-    background: linear-gradient(90deg, rgba(0, 212, 255, 0.1), rgba(102, 126, 234, 0.1));
-    transform: scale(0.98);
+    background: linear-gradient(90deg, #e8f4ff, #e0f0ff);
 }
 
 .tracklist li.active {
-    background: linear-gradient(90deg, rgba(0, 212, 255, 0.15), rgba(102, 126, 234, 0.15));
-    border-left: 3px solid var(--accent);
-    padding-left: 17px;
+    background: linear-gradient(90deg, #d0e8ff, #c0dcff);
+    border-left: 4px solid var(--accent);
+    padding-left: 12px;
+    font-weight: 600;
 }
 
 .tracklist li.active::before {
     content: "▶";
     font-size: 10px;
-    min-width: 12px;
+    min-width: 14px;
     color: var(--accent);
     font-weight: bold;
+    margin-right: 4px;
+}
+
+.track-item-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    min-width: 0;
 }
 
 .track-item-title {
     flex: 1;
-    font-size: 14px;
+    font-size: 13px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     font-weight: 500;
-    color: #1a1a1a;
+    color: #333;
 }
 
 .track-item-duration {
     font-size: 12px;
-    color: var(--text-secondary);
+    color: #666;
     font-variant-numeric: tabular-nums;
-    font-weight: 600;
+    font-weight: 500;
+    min-width: 40px;
+    text-align: right;
+}
+
+.delete-track-btn {
+    background: none;
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    opacity: 0.5;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.delete-track-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.delete-track-btn:active {
+    transform: scale(1.3);
 }
 
 .empty-state {
@@ -477,7 +769,7 @@ html, body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 24px !important;
+    padding: 40px 24px !important;
     text-align: center;
     gap: 8px;
     border: none !important;
@@ -491,40 +783,41 @@ html, body {
 }
 
 .empty-state p {
-    color: var(--text-secondary);
+    color: #666;
     line-height: 1.5;
     font-weight: 500;
+    font-size: 13px;
+    margin: 0;
 }
 
 .empty-state .hint {
-    font-size: 13px;
+    font-size: 12px;
     color: #999;
 }
 
 /* Scrollbar styling for webkit browsers */
-.tracklist::-webkit-scrollbar {
-    width: 4px;
+.tracklist::-webkit-scrollbar,
+.menu-list::-webkit-scrollbar {
+    width: 6px;
 }
 
-.tracklist::-webkit-scrollbar-track {
-    background: transparent;
+.tracklist::-webkit-scrollbar-track,
+.menu-list::-webkit-scrollbar-track {
+    background: #f0f0f0;
 }
 
-.tracklist::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 2px;
+.tracklist::-webkit-scrollbar-thumb,
+.menu-list::-webkit-scrollbar-thumb {
+    background: #c0c0c0;
+    border-radius: 3px;
+}
+
+.tracklist::-webkit-scrollbar-thumb:hover,
+.menu-list::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
 }
 
 /* Loading animation */
-@keyframes pulse {
-    0%, 100% {
-        opacity: 1;
-    }
-    50% {
-        opacity: 0.5;
-    }
-}
-
 .loading {
     animation: pulse 1.5s ease-in-out infinite;
 }

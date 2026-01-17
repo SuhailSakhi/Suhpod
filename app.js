@@ -15,7 +15,11 @@ const state = {
     audioElement: null,
     videoElement: null,
     isVideo: false,
-    isLoading: false
+    isLoading: false,
+    playlists: [],
+    currentPlaylist: null,
+    tapCount: 0,
+    tapTimer: null
 };
 
 // DOM Elements
@@ -23,31 +27,41 @@ const elements = {
     fileInput: document.getElementById('fileInput'),
     loadBtn: document.getElementById('loadBtn'),
     playBtn: document.getElementById('playBtn'),
-    prevBtn: document.getElementById('prevBtn'),
-    nextBtn: document.getElementById('nextBtn'),
-    volumeUpBtn: document.getElementById('volumeUpBtn'),
-    volumeDownBtn: document.getElementById('volumeDownBtn'),
-    clearBtn: document.getElementById('clearBtn'),
+    menuBtn: document.getElementById('menuBtn'),
+    seekForwardBtn: document.getElementById('seekForwardBtn'),
+    seekBackwardBtn: document.getElementById('seekBackwardBtn'),
     tracklist: document.getElementById('tracklist'),
     trackTitle: document.getElementById('trackTitle'),
     trackArtist: document.getElementById('trackArtist'),
     currentTime: document.getElementById('currentTime'),
     duration: document.getElementById('duration'),
     progressFill: document.getElementById('progressFill'),
-    trackCount: document.getElementById('trackCount'),
     playIcon: document.getElementById('playIcon'),
     pauseIcon: document.getElementById('pauseIcon'),
     videoContainer: document.getElementById('videoContainer'),
     videoPlayer: document.getElementById('videoPlayer'),
-    volumeIndicator: document.getElementById('volumeIndicator'),
-    volumeFill: document.getElementById('volumeFill'),
-    volumeText: document.getElementById('volumeText')
+    seekIndicator: document.getElementById('seekIndicator'),
+    seekIcon: document.getElementById('seekIcon'),
+    seekText: document.getElementById('seekText'),
+    multiTapIndicator: document.getElementById('multiTapIndicator'),
+    tapCount: document.getElementById('tapCount'),
+    tapText: document.getElementById('tapText'),
+    playlistSelector: document.getElementById('playlistSelector'),
+    menuView: document.getElementById('menuView'),
+    playlistsView: document.getElementById('playlistsView'),
+    tracklistView: document.getElementById('tracklistView'),
+    playlistMenuList: document.getElementById('playlistMenuList'),
+    backToMainBtn: document.getElementById('backToMainBtn'),
+    backToPlaylistsBtn: document.getElementById('backToPlaylistsBtn'),
+    currentPlaylistName: document.getElementById('currentPlaylistName'),
+    createPlaylistItem: document.getElementById('createPlaylistItem')
 };
 
 // IndexedDB Setup for persistent storage
 const DB_NAME = 'iPodDB';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_NAME = 'mediaFiles';
+const PLAYLIST_STORE = 'playlists';
 let db;
 
 // Initialize IndexedDB
@@ -63,10 +77,19 @@ function initDB() {
         
         request.onupgradeneeded = (event) => {
             db = event.target.result;
+            
+            // Media files store
             if (!db.objectStoreNames.contains(STORE_NAME)) {
                 const objectStore = db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
                 objectStore.createIndex('name', 'name', { unique: false });
                 objectStore.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+            
+            // Playlists store
+            if (!db.objectStoreNames.contains(PLAYLIST_STORE)) {
+                const playlistStore = db.createObjectStore(PLAYLIST_STORE, { keyPath: 'id', autoIncrement: true });
+                playlistStore.createIndex('name', 'name', { unique: false });
+                playlistStore.createIndex('timestamp', 'timestamp', { unique: false });
             }
         };
     });
@@ -151,63 +174,328 @@ async function clearDB() {
 initDB().then(() => {
     console.log('IndexedDB initialized');
     loadStoredTracks();
+    loadPlaylists();
 }).catch(err => {
     console.error('Failed to initialize IndexedDB:', err);
     alert('Failed to initialize storage. Your files may not be saved permanently.');
 });
 
-// Volume Control
-let currentVolume = 0.5; // Default 50%
-let volumeTimeout;
-
-// Load saved volume from localStorage
-if (localStorage.getItem('ipodVolume')) {
-    currentVolume = parseFloat(localStorage.getItem('ipodVolume'));
+// Playlist Management
+async function loadPlaylists() {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PLAYLIST_STORE], 'readonly');
+        const store = transaction.objectStore(PLAYLIST_STORE);
+        const request = store.getAll();
+        
+        request.onsuccess = () => {
+            state.playlists = request.result || [];
+            if (state.playlists.length === 0) {
+                // Create default "All Music" playlist
+                createPlaylist('All Music', state.tracks.map(t => t.id)).then(() => {
+                    state.currentPlaylist = state.playlists[0];
+                });
+            } else {
+                state.currentPlaylist = state.playlists[0];
+            }
+            updatePlaylistUI();
+            resolve(state.playlists);
+        };
+        
+        request.onerror = () => reject(request.error);
+    });
 }
 
-// Set initial volume when media is loaded
-function setInitialVolume() {
-    if (state.audioElement) state.audioElement.volume = currentVolume;
-    if (state.videoElement) state.videoElement.volume = currentVolume;
+async function createPlaylist(name, trackIds = []) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PLAYLIST_STORE], 'readwrite');
+        const store = transaction.objectStore(PLAYLIST_STORE);
+        
+        const playlist = {
+            name: name,
+            trackIds: trackIds,
+            timestamp: Date.now()
+        };
+        
+        const request = store.add(playlist);
+        
+        request.onsuccess = () => {
+            playlist.id = request.result;
+            state.playlists.push(playlist);
+            updatePlaylistUI();
+            resolve(playlist);
+        };
+        
+        request.onerror = () => reject(request.error);
+    });
 }
 
-// Update volume display
-function updateVolumeDisplay() {
-    const percentage = Math.round(currentVolume * 100);
-    elements.volumeFill.style.width = `${percentage}%`;
-    elements.volumeText.textContent = `${percentage}%`;
-    
-    // Show volume indicator
-    elements.volumeIndicator.style.display = 'flex';
-    
-    // Hide after 2 seconds
-    clearTimeout(volumeTimeout);
-    volumeTimeout = setTimeout(() => {
-        elements.volumeIndicator.style.display = 'none';
-    }, 2000);
+async function updatePlaylist(id, name, trackIds) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PLAYLIST_STORE], 'readwrite');
+        const store = transaction.objectStore(PLAYLIST_STORE);
+        const request = store.get(id);
+        
+        request.onsuccess = () => {
+            const playlist = request.result;
+            playlist.name = name;
+            playlist.trackIds = trackIds;
+            
+            const updateRequest = store.put(playlist);
+            updateRequest.onsuccess = () => {
+                const idx = state.playlists.findIndex(p => p.id === id);
+                if (idx >= 0) state.playlists[idx] = playlist;
+                updatePlaylistUI();
+                resolve(playlist);
+            };
+            updateRequest.onerror = () => reject(updateRequest.error);
+        };
+        
+        request.onerror = () => reject(request.error);
+    });
 }
 
-// Volume up
-elements.volumeUpBtn.addEventListener('click', () => {
-    currentVolume = Math.min(1, currentVolume + 0.1);
+async function deletePlaylist(id) {
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([PLAYLIST_STORE], 'readwrite');
+        const store = transaction.objectStore(PLAYLIST_STORE);
+        const request = store.delete(id);
+        
+        request.onsuccess = () => {
+            state.playlists = state.playlists.filter(p => p.id !== id);
+            if (state.currentPlaylist && state.currentPlaylist.id === id) {
+                state.currentPlaylist = state.playlists[0] || null;
+            }
+            updatePlaylistUI();
+            resolve();
+        };
+        
+        request.onerror = () => reject(request.error);
+    });
+}
+
+async function deleteTrack(trackId) {
+    if (!confirm('Are you sure you want to delete this track?')) {
+        return;
+    }
     
-    if (state.audioElement) state.audioElement.volume = currentVolume;
-    if (state.videoElement) state.videoElement.volume = currentVolume;
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const request = store.delete(trackId);
+        
+        request.onsuccess = () => {
+            // Remove from state
+            state.tracks = state.tracks.filter(t => t.id !== trackId);
+            
+            // Remove from all playlists
+            state.playlists.forEach(playlist => {
+                if (playlist.trackIds.includes(trackId)) {
+                    playlist.trackIds = playlist.trackIds.filter(id => id !== trackId);
+                    updatePlaylist(playlist.id, playlist.name, playlist.trackIds);
+                }
+            });
+            
+            // If current track is deleted, stop playback
+            const currentTrack = state.tracks[state.currentIndex];
+            if (!currentTrack || currentTrack.id === trackId) {
+                if (state.audioElement) state.audioElement.pause();
+                if (state.videoElement) state.videoElement.pause();
+                state.currentIndex = 0;
+            }
+            
+            // Re-render the track list
+            if (state.currentPlaylist) {
+                updatePlaylistUI();
+            } else {
+                renderTrackList(state.tracks);
+            }
+            
+            resolve();
+        };
+        
+        request.onerror = () => reject(request.error);
+    });
+}
+
+function updatePlaylistUI() {
+    // Update playlist selector in header
+    const playlistName = state.currentPlaylist ? state.currentPlaylist.name : 'No Playlist';
+    if (elements.playlistSelector) {
+        elements.playlistSelector.textContent = playlistName;
+    }
     
-    localStorage.setItem('ipodVolume', currentVolume.toString());
-    updateVolumeDisplay();
+    // Update view header
+    if (elements.currentPlaylistName) {
+        if (state.currentPlaylist) {
+            elements.currentPlaylistName.textContent = state.currentPlaylist.name;
+        } else {
+            elements.currentPlaylistName.textContent = 'All Music';
+        }
+    }
+    
+    // Filter tracks based on current playlist
+    if (state.currentPlaylist) {
+        const playlistTracks = state.tracks.filter(t => 
+            state.currentPlaylist.trackIds.includes(t.id)
+        );
+        renderTrackList(playlistTracks);
+    } else {
+        // Show all tracks if no playlist is selected
+        renderTrackList(state.tracks);
+    }
+}
+
+// Seek Controls
+let seekTimeout;
+const SEEK_AMOUNT = 10; // seconds
+
+// Show seek indicator
+function showSeekIndicator(seconds) {
+    const isForward = seconds > 0;
+    elements.seekIcon.textContent = isForward ? '⏩' : '⏪';
+    elements.seekText.textContent = `${isForward ? '+' : ''}${seconds}s`;
+    
+    // Show indicator
+    elements.seekIndicator.style.display = 'flex';
+    
+    // Hide after 1 second
+    clearTimeout(seekTimeout);
+    seekTimeout = setTimeout(() => {
+        elements.seekIndicator.style.display = 'none';
+    }, 1000);
+}
+
+// Seek forward
+elements.seekForwardBtn.addEventListener('click', () => {
+    const mediaElement = state.isVideo ? state.videoElement : state.audioElement;
+    if (!mediaElement || state.currentIndex === -1) return;
+    
+    const newTime = Math.min(mediaElement.duration, mediaElement.currentTime + SEEK_AMOUNT);
+    mediaElement.currentTime = newTime;
+    showSeekIndicator(SEEK_AMOUNT);
 });
 
-// Volume down
-elements.volumeDownBtn.addEventListener('click', () => {
-    currentVolume = Math.max(0, currentVolume - 0.1);
+// Seek backward
+elements.seekBackwardBtn.addEventListener('click', () => {
+    const mediaElement = state.isVideo ? state.videoElement : state.audioElement;
+    if (!mediaElement || state.currentIndex === -1) return;
     
-    if (state.audioElement) state.audioElement.volume = currentVolume;
-    if (state.videoElement) state.videoElement.volume = currentVolume;
-    
-    localStorage.setItem('ipodVolume', currentVolume.toString());
-    updateVolumeDisplay();
+    const newTime = Math.max(0, mediaElement.currentTime - SEEK_AMOUNT);
+    mediaElement.currentTime = newTime;
+    showSeekIndicator(-SEEK_AMOUNT);
 });
+
+// Menu button - toggle to main menu
+elements.menuBtn.addEventListener('click', () => {
+    showView('menu');
+});
+
+// Menu navigation
+document.querySelectorAll('.menu-item[data-action]').forEach(item => {
+    item.addEventListener('click', () => {
+        const action = item.dataset.action;
+        if (action === 'playlists') {
+            showView('playlists');
+            renderPlaylistMenu();
+        } else if (action === 'all-music') {
+            state.currentPlaylist = null; // null means show all music
+            showView('tracklist');
+            elements.currentPlaylistName.textContent = 'All Music';
+            renderTrackList(state.tracks); // Show all tracks
+        }
+    });
+});
+
+// Back buttons
+elements.backToMainBtn.addEventListener('click', () => showView('menu'));
+elements.backToPlaylistsBtn.addEventListener('click', () => showView('playlists'));
+
+// Create playlist
+elements.createPlaylistItem.addEventListener('click', () => {
+    // Auto-generate playlist name: count existing playlists (excluding "All Music")
+    const userPlaylists = state.playlists.filter(p => p.name !== 'All Music');
+    const playlistNumber = userPlaylists.length + 1;
+    const name = `${playlistNumber}`;
+    
+    createPlaylist(name, []).then(() => {
+        renderPlaylistMenu();
+    });
+});
+
+// Playlist selector - cycle through playlists
+elements.playlistSelector.addEventListener('click', () => {
+    if (state.playlists.length === 0) return;
+    
+    const currentIndex = state.playlists.findIndex(p => p.id === state.currentPlaylist?.id);
+    const nextIndex = (currentIndex + 1) % state.playlists.length;
+    state.currentPlaylist = state.playlists[nextIndex];
+    updatePlaylistUI();
+});
+
+function showView(viewName) {
+    elements.menuView.style.display = 'none';
+    elements.playlistsView.style.display = 'none';
+    elements.tracklistView.style.display = 'none';
+    
+    if (viewName === 'menu') {
+        elements.menuView.style.display = 'flex';
+    } else if (viewName === 'playlists') {
+        elements.playlistsView.style.display = 'flex';
+    } else if (viewName === 'tracklist') {
+        elements.tracklistView.style.display = 'flex';
+    }
+}
+
+function renderPlaylistMenu() {
+    const playlistItems = state.playlists.map(playlist => `
+        <li class="menu-item playlist-menu-item" data-id="${playlist.id}">
+            <div class="playlist-info">
+                <span class="playlist-name">${escapeHtml(playlist.name)}</span>
+                <span class="playlist-count">${playlist.trackIds.length} tracks</span>
+            </div>
+            <div class="playlist-actions">
+                <button class="delete-playlist-btn" data-id="${playlist.id}">🗑️</button>
+                <span class="arrow">›</span>
+            </div>
+        </li>
+    `).join('');
+    
+    elements.playlistMenuList.innerHTML = `
+        <li class="menu-item special" id="createPlaylistItem">
+            <span>+ Nieuwe Playlist</span>
+        </li>
+        ${playlistItems}
+    `;
+    
+    // Re-attach create playlist handler
+    document.getElementById('createPlaylistItem').addEventListener('click', () => {
+        // Auto-generate playlist name: count existing playlists (excluding "All Music")
+        const userPlaylists = state.playlists.filter(p => p.name !== 'All Music');
+        const playlistNumber = userPlaylists.length + 1;
+        const name = `${playlistNumber}`;
+        
+        createPlaylist(name, []).then(() => {
+            renderPlaylistMenu();
+        });
+    });
+    
+    // Attach playlist click handlers
+    document.querySelectorAll('.playlist-menu-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-playlist-btn')) {
+                const id = parseInt(e.target.dataset.id);
+                if (confirm('Are you sure you want to delete this playlist?')) {
+                    deletePlaylist(id).then(() => renderPlaylistMenu());
+                }
+            } else {
+                const id = parseInt(item.dataset.id);
+                state.currentPlaylist = state.playlists.find(p => p.id === id);
+                showView('tracklist');
+                updatePlaylistUI();
+            }
+        });
+    });
+}
 
 // Format time helper
 // iOS requires the audio element to be created in response to user interaction
@@ -217,7 +505,6 @@ function initAudio() {
         state.audioElement = new Audio();
         // Critical for iOS: prevents inline playback issues
         state.audioElement.preload = 'metadata';
-        state.audioElement.volume = currentVolume;
         
         // Event listeners
         state.audioElement.addEventListener('timeupdate', handleTimeUpdate);
@@ -248,7 +535,6 @@ function initVideo() {
         state.videoElement.preload = 'metadata';
         state.videoElement.controls = false;
         state.videoElement.playsInline = true;
-        state.videoElement.volume = currentVolume;
         
         // Event listeners
         state.videoElement.addEventListener('timeupdate', handleTimeUpdate);
@@ -452,8 +738,9 @@ async function loadTrackMetadata() {
 }
 
 // Render track list
-function renderTrackList() {
-    const isEmpty = state.tracks.length === 0;
+function renderTrackList(tracksToDisplay = null) {
+    const tracks = tracksToDisplay || state.tracks;
+    const isEmpty = tracks.length === 0;
     
     if (isEmpty) {
         elements.tracklist.innerHTML = `
@@ -462,27 +749,35 @@ function renderTrackList() {
                 <p class="hint">Tap the upload button to add tracks</p>
             </li>
         `;
-        elements.trackCount.textContent = '0 tracks';
-        elements.clearBtn.style.display = 'none';
         return;
     }
     
-    elements.trackCount.textContent = `${state.tracks.length} track${state.tracks.length !== 1 ? 's' : ''}`;
-    elements.clearBtn.style.display = 'block';
-    
-    elements.tracklist.innerHTML = state.tracks.map((track, index) => `
+    elements.tracklist.innerHTML = tracks.map((track, index) => `
         <li data-index="${index}" class="${index === state.currentIndex ? 'active' : ''}">
-            <span class="track-item-title">${track.isVideo ? '🎬 ' : ''}${escapeHtml(track.name)}</span>
-            <span class="track-item-duration">${formatTime(track.duration)}</span>
+            <div class="track-item-info">
+                <span class="track-item-title">${track.isVideo ? '🎬 ' : ''}${escapeHtml(track.name)}</span>
+                <span class="track-item-duration">${formatTime(track.duration)}</span>
+            </div>
+            <button class="delete-track-btn" data-track-id="${track.id}" aria-label="Delete track">🗑️</button>
         </li>
     `).join('');
     
-    // Add click listeners
+    // Add click listeners for playing tracks
     elements.tracklist.querySelectorAll('li').forEach(li => {
-        li.addEventListener('click', () => {
+        const trackInfo = li.querySelector('.track-item-info');
+        trackInfo.addEventListener('click', () => {
             const index = parseInt(li.dataset.index);
             loadTrack(index);
             play();
+        });
+    });
+    
+    // Add delete listeners
+    elements.tracklist.querySelectorAll('.delete-track-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const trackId = parseInt(btn.dataset.trackId);
+            deleteTrack(trackId);
         });
     });
 }
@@ -564,94 +859,68 @@ function pause() {
     updateMediaSessionPlaybackState('paused');
 }
 
-// Play/Pause toggle
+// Play/Pause toggle with multi-tap support
 elements.playBtn.addEventListener('click', () => {
-    if (state.currentIndex === -1) {
-        // Load first track if none loaded
-        if (state.tracks.length > 0) {
-            loadTrack(0);
+    state.tapCount++;
+    
+    // Clear existing timer
+    if (state.tapTimer) {
+        clearTimeout(state.tapTimer);
+    }
+    
+    // Show indicator
+    elements.multiTapIndicator.style.display = 'flex';
+    elements.tapCount.textContent = state.tapCount;
+    
+    // Update text based on tap count
+    if (state.tapCount === 1) {
+        elements.tapText.textContent = 'Pause/Play';
+    } else if (state.tapCount === 2) {
+        elements.tapText.textContent = 'Next';
+    } else if (state.tapCount >= 3) {
+        elements.tapText.textContent = 'Previous';
+        state.tapCount = 3; // Cap at 3
+    }
+    
+    // Execute action after delay
+    state.tapTimer = setTimeout(() => {
+        executeTapAction(state.tapCount);
+        state.tapCount = 0;
+        elements.multiTapIndicator.style.display = 'none';
+    }, 500); // 500ms delay to detect multiple taps
+});
+
+function executeTapAction(tapCount) {
+    if (tapCount === 1) {
+        // Single tap - pause/play
+        if (state.currentIndex === -1) {
+            // Load first track if none loaded
+            if (state.tracks.length > 0) {
+                loadTrack(0);
+                play();
+            }
+            return;
+        }
+        
+        if (state.isPlaying) {
+            pause();
+        } else {
             play();
         }
-        return;
+    } else if (tapCount === 2) {
+        // Double tap - next track
+        if (state.currentIndex < state.tracks.length - 1) {
+            loadTrack(state.currentIndex + 1);
+            if (state.isPlaying) play();
+        }
+    } else if (tapCount >= 3) {
+        // Triple tap - previous track
+        if (state.currentIndex > 0) {
+            loadTrack(state.currentIndex - 1);
+            if (state.isPlaying) play();
+        }
     }
-    
-    if (state.isPlaying) {
-        pause();
-    } else {
-        play();
-    }
-});
-
-// Previous track
-elements.prevBtn.addEventListener('click', () => {
-    if (state.currentIndex > 0) {
-        loadTrack(state.currentIndex - 1);
-        play();
-    }
-});
-
-// Next track
-elements.nextBtn.addEventListener('click', () => {
-    if (state.currentIndex < state.tracks.length - 1) {
-        loadTrack(state.currentIndex + 1);
-        play();
-    }
-});
-
-// Clear all tracks
-elements.clearBtn.addEventListener('click', async () => {
-    if (!confirm('Clear all tracks? This will delete all stored files permanently.')) return;
-    
-    // Show loading state
-    elements.trackTitle.textContent = 'Clearing...';
-    elements.trackArtist.textContent = 'Please wait';
-    
-    // Stop playback
-    if (state.audioElement) {
-        pause();
-        state.audioElement.src = '';
-    }
-    if (state.videoElement) {
-        state.videoElement.pause();
-        state.videoElement.src = '';
-    }
-    
-    // Revoke object URLs to free memory
-    state.tracks.forEach(track => {
-        URL.revokeObjectURL(track.url);
-    });
-    
-    // Clear IndexedDB
-    try {
-        await clearDB();
-        console.log('IndexedDB cleared');
-    } catch (err) {
-        console.error('Failed to clear IndexedDB:', err);
-    }
-    
-    // Reset state
-    state.tracks = [];
-    state.currentIndex = -1;
-    state.isPlaying = false;
-    state.isVideo = false;
-    
-    // Reset UI
-    elements.trackTitle.textContent = 'All files cleared';
-    elements.trackArtist.textContent = 'Import new files';
-    elements.currentTime.textContent = '0:00';
-    elements.duration.textContent = '0:00';
-    elements.progressFill.style.width = '0%';
-    elements.videoContainer.style.display = 'none';
-    
-    renderTrackList();
-    updateControls();
-    
-    // Auto-clear message
-    setTimeout(() => {
-        elements.trackTitle.textContent = 'No track loaded';
-        elements.trackArtist.textContent = '—';
-    }, 2000);
-});
+}
 
 // Media event handlers
 function handleTimeUpdate() {
@@ -720,8 +989,8 @@ function updateControls() {
     const hasCurrentTrack = state.currentIndex >= 0;
     
     elements.playBtn.disabled = !hasTracks;
-    elements.prevBtn.disabled = !hasCurrentTrack || state.currentIndex === 0;
-    elements.nextBtn.disabled = !hasCurrentTrack || state.currentIndex === state.tracks.length - 1;
+    elements.seekForwardBtn.disabled = !hasCurrentTrack;
+    elements.seekBackwardBtn.disabled = !hasCurrentTrack;
 }
 
 // Media Session API - for lock screen controls and Bluetooth

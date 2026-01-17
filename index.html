@@ -18,6 +18,7 @@
         <!-- Header -->
         <header class="header">
             <h1 class="logo">Suhpod</h1>
+            <div class="playlist-selector" id="playlistSelector">All Music</div>
             <button class="load-btn" id="loadBtn" aria-label="Load music">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -51,57 +52,88 @@
 
         <!-- Controls - iPod Click Wheel -->
         <div class="controls">
-            <button class="control-btn" id="volumeUpBtn" aria-label="Volume up">
+            <button class="control-btn" id="menuBtn" aria-label="Menu">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                    <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
                 </svg>
             </button>
-            <button class="control-btn" id="prevBtn" aria-label="Previous track" disabled>
+            <button class="control-btn" id="seekBackwardBtn" aria-label="Seek backward" disabled>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+                    <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
                 </svg>
             </button>
             <button class="control-btn play-btn" id="playBtn" aria-label="Play" disabled>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" id="playIcon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" id="playIcon">
                     <path d="M8 5v14l11-7z"/>
                 </svg>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" id="pauseIcon" style="display: none;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" id="pauseIcon" style="display: none;">
                     <path d="M6 4h4v16H6zM14 4h4v16h-4z"/>
                 </svg>
             </button>
-            <button class="control-btn" id="nextBtn" aria-label="Next track" disabled>
+            <button class="control-btn" id="seekForwardBtn" aria-label="Seek forward" disabled>
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M16 6h2v12h-2zm-9 6l8.5 6V6z"/>
-                </svg>
-            </button>
-            <button class="control-btn" id="volumeDownBtn" aria-label="Volume down">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M19 13H5v-2h14v2z"/>
+                    <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
                 </svg>
             </button>
         </div>
 
-        <!-- Volume Indicator -->
-        <div class="volume-indicator" id="volumeIndicator" style="display: none;">
-            <div class="volume-icon">🔊</div>
-            <div class="volume-bar">
-                <div class="volume-fill" id="volumeFill"></div>
-            </div>
-            <div class="volume-text" id="volumeText">50%</div>
+        <!-- Seek Indicator -->
+        <div class="seek-indicator" id="seekIndicator" style="display: none;">
+            <div class="seek-icon" id="seekIcon">⏩</div>
+            <div class="seek-text" id="seekText">+10s</div>
+        </div>
+
+        <!-- Multi-tap Indicator -->
+        <div class="multi-tap-indicator" id="multiTapIndicator" style="display: none;">
+            <div class="tap-count" id="tapCount">1</div>
+            <div class="tap-text" id="tapText">Pause</div>
         </div>
 
         <!-- Track List -->
         <div class="tracklist-container">
-            <div class="tracklist-header">
-                <span id="trackCount">0 tracks</span>
-                <button class="clear-btn" id="clearBtn" style="display: none;">Clear all</button>
+            <!-- Main Menu View -->
+            <div class="menu-view" id="menuView">
+                <div class="menu-header">
+                    <h2>Menu</h2>
+                </div>
+                <ul class="menu-list">
+                    <li class="menu-item" data-action="playlists">
+                        <span>🎵 Playlists</span>
+                        <span class="arrow">›</span>
+                    </li>
+                    <li class="menu-item" data-action="all-music">
+                        <span>📀 Alle Muziek</span>
+                        <span class="arrow">›</span>
+                    </li>
+                </ul>
             </div>
-            <ul class="tracklist" id="tracklist">
-                <li class="empty-state">
-                    <p>No music loaded</p>
-                    <p class="hint">Tap the upload button to add tracks</p>
-                </li>
-            </ul>
+            
+            <!-- Playlists View -->
+            <div class="menu-view" id="playlistsView" style="display: none;">
+                <div class="menu-header">
+                    <button class="back-btn" id="backToMainBtn">‹ Menu</button>
+                    <h2>Playlists</h2>
+                </div>
+                <ul class="menu-list" id="playlistMenuList">
+                    <li class="menu-item special" id="createPlaylistItem">
+                        <span>+ Nieuwe Playlist</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <!-- Tracklist View -->
+            <div class="menu-view" id="tracklistView" style="display: none;">
+                <div class="menu-header">
+                    <button class="back-btn" id="backToPlaylistsBtn">‹ Playlists</button>
+                    <h2 id="currentPlaylistName">Tracks</h2>
+                </div>
+                <ul class="tracklist" id="tracklist">
+                    <li class="empty-state">
+                        <p>No music loaded</p>
+                        <p class="hint">Tap the upload button to add tracks</p>
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 
