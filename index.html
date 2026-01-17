@@ -50,24 +50,43 @@
 
         <!-- Controls - iPod Click Wheel -->
         <div class="controls">
+            <button class="control-btn" id="volumeUpBtn" aria-label="Volume up">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                </svg>
+            </button>
             <button class="control-btn" id="prevBtn" aria-label="Previous track" disabled>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
                 </svg>
             </button>
             <button class="control-btn play-btn" id="playBtn" aria-label="Play" disabled>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" id="playIcon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" id="playIcon">
                     <path d="M8 5v14l11-7z"/>
                 </svg>
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="white" id="pauseIcon" style="display: none;">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="white" id="pauseIcon" style="display: none;">
                     <path d="M6 4h4v16H6zM14 4h4v16h-4z"/>
                 </svg>
             </button>
             <button class="control-btn" id="nextBtn" aria-label="Next track" disabled>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="currentColor">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M16 18h2V6h-2zm-11-7l8.5-6v12z"/>
                 </svg>
             </button>
+            <button class="control-btn" id="volumeDownBtn" aria-label="Volume down">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M19 13H5v-2h14v2z"/>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Volume Indicator -->
+        <div class="volume-indicator" id="volumeIndicator" style="display: none;">
+            <div class="volume-icon">🔊</div>
+            <div class="volume-bar">
+                <div class="volume-fill" id="volumeFill"></div>
+            </div>
+            <div class="volume-text" id="volumeText">50%</div>
         </div>
 
         <!-- Track List -->

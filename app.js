@@ -119,6 +119,59 @@ initDB().then(() => {
     alert('Failed to initialize storage. Your files may not be saved permanently.');
 });
 
+// Volume Control
+let currentVolume = 0.5; // Default 50%
+let volumeTimeout;
+
+// Load saved volume from localStorage
+if (localStorage.getItem('ipodVolume')) {
+    currentVolume = parseFloat(localStorage.getItem('ipodVolume'));
+}
+
+// Set initial volume when media is loaded
+function setInitialVolume() {
+    if (state.audioElement) state.audioElement.volume = currentVolume;
+    if (state.videoElement) state.videoElement.volume = currentVolume;
+}
+
+// Update volume display
+function updateVolumeDisplay() {
+    const percentage = Math.round(currentVolume * 100);
+    elements.volumeFill.style.width = `${percentage}%`;
+    elements.volumeText.textContent = `${percentage}%`;
+    
+    // Show volume indicator
+    elements.volumeIndicator.style.display = 'flex';
+    
+    // Hide after 2 seconds
+    clearTimeout(volumeTimeout);
+    volumeTimeout = setTimeout(() => {
+        elements.volumeIndicator.style.display = 'none';
+    }, 2000);
+}
+
+// Volume up
+elements.volumeUpBtn.addEventListener('click', () => {
+    currentVolume = Math.min(1, currentVolume + 0.1);
+    
+    if (state.audioElement) state.audioElement.volume = currentVolume;
+    if (state.videoElement) state.videoElement.volume = currentVolume;
+    
+    localStorage.setItem('ipodVolume', currentVolume.toString());
+    updateVolumeDisplay();
+});
+
+// Volume down
+elements.volumeDownBtn.addEventListener('click', () => {
+    currentVolume = Math.max(0, currentVolume - 0.1);
+    
+    if (state.audioElement) state.audioElement.volume = currentVolume;
+    if (state.videoElement) state.videoElement.volume = currentVolume;
+    
+    localStorage.setItem('ipodVolume', currentVolume.toString());
+    updateVolumeDisplay();
+});
+
 // State
 const state = {
     tracks: [],
@@ -137,6 +190,8 @@ const elements = {
     playBtn: document.getElementById('playBtn'),
     prevBtn: document.getElementById('prevBtn'),
     nextBtn: document.getElementById('nextBtn'),
+    volumeUpBtn: document.getElementById('volumeUpBtn'),
+    volumeDownBtn: document.getElementById('volumeDownBtn'),
     clearBtn: document.getElementById('clearBtn'),
     tracklist: document.getElementById('tracklist'),
     trackTitle: document.getElementById('trackTitle'),
@@ -148,7 +203,10 @@ const elements = {
     playIcon: document.getElementById('playIcon'),
     pauseIcon: document.getElementById('pauseIcon'),
     videoContainer: document.getElementById('videoContainer'),
-    videoPlayer: document.getElementById('videoPlayer')
+    videoPlayer: document.getElementById('videoPlayer'),
+    volumeIndicator: document.getElementById('volumeIndicator'),
+    volumeFill: document.getElementById('volumeFill'),
+    volumeText: document.getElementById('volumeText')
 };
 
 // Initialize Audio Element
@@ -159,6 +217,7 @@ function initAudio() {
         state.audioElement = new Audio();
         // Critical for iOS: prevents inline playback issues
         state.audioElement.preload = 'metadata';
+        state.audioElement.volume = currentVolume;
         
         // Event listeners
         state.audioElement.addEventListener('timeupdate', handleTimeUpdate);
@@ -189,6 +248,7 @@ function initVideo() {
         state.videoElement.preload = 'metadata';
         state.videoElement.controls = false;
         state.videoElement.playsInline = true;
+        state.videoElement.volume = currentVolume;
         
         // Event listeners
         state.videoElement.addEventListener('timeupdate', handleTimeUpdate);
