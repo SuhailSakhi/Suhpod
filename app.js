@@ -7,6 +7,43 @@ if ('serviceWorker' in navigator) {
     });
 }
 
+// State
+const state = {
+    tracks: [],
+    currentIndex: -1,
+    isPlaying: false,
+    audioElement: null,
+    videoElement: null,
+    isVideo: false,
+    isLoading: false
+};
+
+// DOM Elements
+const elements = {
+    fileInput: document.getElementById('fileInput'),
+    loadBtn: document.getElementById('loadBtn'),
+    playBtn: document.getElementById('playBtn'),
+    prevBtn: document.getElementById('prevBtn'),
+    nextBtn: document.getElementById('nextBtn'),
+    volumeUpBtn: document.getElementById('volumeUpBtn'),
+    volumeDownBtn: document.getElementById('volumeDownBtn'),
+    clearBtn: document.getElementById('clearBtn'),
+    tracklist: document.getElementById('tracklist'),
+    trackTitle: document.getElementById('trackTitle'),
+    trackArtist: document.getElementById('trackArtist'),
+    currentTime: document.getElementById('currentTime'),
+    duration: document.getElementById('duration'),
+    progressFill: document.getElementById('progressFill'),
+    trackCount: document.getElementById('trackCount'),
+    playIcon: document.getElementById('playIcon'),
+    pauseIcon: document.getElementById('pauseIcon'),
+    videoContainer: document.getElementById('videoContainer'),
+    videoPlayer: document.getElementById('videoPlayer'),
+    volumeIndicator: document.getElementById('volumeIndicator'),
+    volumeFill: document.getElementById('volumeFill'),
+    volumeText: document.getElementById('volumeText')
+};
+
 // IndexedDB Setup for persistent storage
 const DB_NAME = 'iPodDB';
 const DB_VERSION = 1;
@@ -172,44 +209,7 @@ elements.volumeDownBtn.addEventListener('click', () => {
     updateVolumeDisplay();
 });
 
-// State
-const state = {
-    tracks: [],
-    currentIndex: -1,
-    isPlaying: false,
-    audioElement: null,
-    videoElement: null,
-    isVideo: false,
-    isLoading: false
-};
-
-// DOM Elements
-const elements = {
-    fileInput: document.getElementById('fileInput'),
-    loadBtn: document.getElementById('loadBtn'),
-    playBtn: document.getElementById('playBtn'),
-    prevBtn: document.getElementById('prevBtn'),
-    nextBtn: document.getElementById('nextBtn'),
-    volumeUpBtn: document.getElementById('volumeUpBtn'),
-    volumeDownBtn: document.getElementById('volumeDownBtn'),
-    clearBtn: document.getElementById('clearBtn'),
-    tracklist: document.getElementById('tracklist'),
-    trackTitle: document.getElementById('trackTitle'),
-    trackArtist: document.getElementById('trackArtist'),
-    currentTime: document.getElementById('currentTime'),
-    duration: document.getElementById('duration'),
-    progressFill: document.getElementById('progressFill'),
-    trackCount: document.getElementById('trackCount'),
-    playIcon: document.getElementById('playIcon'),
-    pauseIcon: document.getElementById('pauseIcon'),
-    videoContainer: document.getElementById('videoContainer'),
-    videoPlayer: document.getElementById('videoPlayer'),
-    volumeIndicator: document.getElementById('volumeIndicator'),
-    volumeFill: document.getElementById('volumeFill'),
-    volumeText: document.getElementById('volumeText')
-};
-
-// Initialize Audio Element
+// Format time helper
 // iOS requires the audio element to be created in response to user interaction
 // We create it on first user interaction and reuse it throughout the session
 function initAudio() {

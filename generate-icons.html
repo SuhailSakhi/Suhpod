@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Creating Icons...</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background: #f5f5f5;
+            gap: 20px;
+        }
+        canvas { border: 1px solid #ddd; background: white; }
+        button { padding: 12px 24px; font-size: 16px; cursor: pointer; background: #007aff; color: white; border: none; border-radius: 8px; }
+        button:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <h2>iPod Icons</h2>
+    <div>
+        <h3>icon-192.png</h3>
+        <canvas id="icon192" width="192" height="192"></canvas>
+        <br><button onclick="download('icon192', 'icon-192.png')">Download</button>
+    </div>
+    <div>
+        <h3>icon-512.png</h3>
+        <canvas id="icon512" width="512" height="512"></canvas>
+        <br><button onclick="download('icon512', 'icon-512.png')">Download</button>
+    </div>
+
+    <script>
+        function drawIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const size = canvas.width;
+            
+            // Black background
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, size, size);
+            
+            // White music note
+            ctx.fillStyle = '#FFFFFF';
+            
+            const scale = size / 192;
+            const centerX = size / 2;
+            const centerY = size / 2;
+            
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.scale(scale, scale);
+            
+            // Note head
+            ctx.beginPath();
+            ctx.ellipse(-10, 20, 15, 12, -0.3, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Note stem
+            ctx.fillRect(3, -30, 4, 50);
+            
+            // Note flag
+            ctx.beginPath();
+            ctx.moveTo(7, -30);
+            ctx.bezierCurveTo(20, -25, 25, -15, 20, -5);
+            ctx.bezierCurveTo(15, 0, 10, 0, 7, -5);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function download(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        drawIcon(document.getElementById('icon192'));
+        drawIcon(document.getElementById('icon512'));
+        
+        // Auto-download both
+        setTimeout(() => {
+            console.log('Click the download buttons to save the icons');
+        }, 100);
+    </script>
+</body>
+</html>
